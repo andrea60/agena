@@ -1,0 +1,30 @@
+{
+  "name": "agena-store",
+  "version": "0.0.1",
+  "description": "Simple and transparent (Angular) state management solution",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "dependencies": {
+    "clone-deep": "^4.0.1",
+    "deepmerge": "^4.2.2",
+    "immer": "^9.0.12",
+    "jasmine-ts": "^0.4.0",
+    "rxjs": "^7.5.2",
+    "tsc": "^2.0.4",
+    "typescript": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/clone-deep": "^4.0.1",
+    "@types/jasmine": "^3.10.3",
+    "jasmine": "^4.0.2",
+    "jasmine-ts-console-reporter": "^3.1.1"
+  },
+  "scripts": {
+    "test": "tsc & npx jasmine"
+  },
+  "author": "",
+  "license": "ISC"
+}
