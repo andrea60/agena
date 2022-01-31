@@ -1,6 +1,6 @@
 import * as deepmerge from "deepmerge";
 import produce from "immer";
-import { BehaviorSubject, distinctUntilChanged, map, Observable } from "rxjs";
+import { BehaviorSubject, distinctUntilChanged, map, Observable, pairwise } from "rxjs";
 import { Subset } from "./subset.type";
 import { deepApply } from "./utils/deep-apply";
 import { deepFreeze } from "./utils/deep-freeze";
@@ -18,11 +18,24 @@ export class SimpleStore<S extends object> {
         this.store = new BehaviorSubject<S>(initialState);
     }
 
+    /**
+     * Return the current state, synchronously
+     */
     protected get value(){
         return this.currentState;
     }
+    /**
+     * Get notified whenever the store changes in any way
+     * @returns A stream that emits everytime the store changes in any way, emitting also the previous version of the state
+     */
+    protected storeChanged$() {
+        return this.store.asObservable().pipe(
+            pairwise(),
+            map(([prev, current]) => ({prev, current}))
+        );
+    }
 
-    /** Selects a portion of the current state, will emit when the selected state part will change */
+    /** Selects a portion of the current state, will emit when the selected state part changes */
     protected select<R>(project: (state:S) => R) : Observable<R> {
         return this.store.asObservable().pipe(
             map(state => project(state)),
@@ -47,7 +60,6 @@ export class SimpleStore<S extends object> {
     /** Reset the store to its default state */
     protected reset(){
         this.currentState = this.initialState;
+        this.store.next(this.currentState);
     }
-
-
 }

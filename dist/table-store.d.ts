@@ -5,9 +5,10 @@ import { Key, TableState } from "./table-state";
 import { TableStoreConfig } from "./table-store-config";
 declare type Selector<E> = Key[] | ((entity: E) => boolean);
 export declare class TableStore<E extends {}, S> extends SimpleStore<TableState<E, S>> {
-    private config;
-    private _changeUID;
-    constructor(initialState: S, config?: TableStoreConfig);
+    protected storeName: string;
+    protected config: TableStoreConfig;
+    protected _changeUID: number;
+    constructor(initialState: S, storeName?: string);
     getEntity(id: Key): E;
     private getEntityFromState;
     private getIndex;
@@ -25,8 +26,14 @@ export declare class TableStore<E extends {}, S> extends SimpleStore<TableState<
     insertMany(entities: E[]): void;
     upsertOne(entity: E): void;
     upsertMany(entities: E[]): void;
-    private updateEntities;
+    private insert;
     private getChangeUID;
     private getId;
+    protected entitiesUpdated(versions: {
+        old: E;
+        new: E;
+    }[]): void;
+    protected entitiesRemoved(entities: E[]): void;
+    protected entitiesAdded(entities: E[]): void;
 }
 export {};

@@ -12,10 +12,20 @@ class SimpleStore {
         this.initialState = this.currentState;
         this.store = new rxjs_1.BehaviorSubject(initialState);
     }
+    /**
+     * Return the current state, synchronously
+     */
     get value() {
         return this.currentState;
     }
-    /** Selects a portion of the current state, will emit when the selected state part will change */
+    /**
+     * Get notified whenever the store changes in any way
+     * @returns A stream that emits everytime the store changes in any way, emitting also the previous version of the state
+     */
+    storeChanged$() {
+        return this.store.asObservable().pipe((0, rxjs_1.pairwise)(), (0, rxjs_1.map)(([prev, current]) => ({ prev, current })));
+    }
+    /** Selects a portion of the current state, will emit when the selected state part changes */
     select(project) {
         return this.store.asObservable().pipe((0, rxjs_1.map)(state => project(state)), (0, rxjs_1.distinctUntilChanged)());
     }
@@ -34,6 +44,7 @@ class SimpleStore {
     /** Reset the store to its default state */
     reset() {
         this.currentState = this.initialState;
+        this.store.next(this.currentState);
     }
 }
 exports.SimpleStore = SimpleStore;

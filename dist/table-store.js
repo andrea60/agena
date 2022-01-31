@@ -9,16 +9,15 @@ const deep_apply_1 = require("./utils/deep-apply");
 const deep_freeze_1 = require("./utils/deep-freeze");
 const is_function_1 = require("./utils/is-function");
 class TableStore extends store_1.SimpleStore {
-    constructor(initialState, config) {
+    constructor(initialState, storeName = '') {
         super({
             entities: [],
             metadata: {},
             custom: initialState
         });
+        this.storeName = storeName;
         this.config = { idKey: 'id' };
         this._changeUID = 0;
-        if (config)
-            this.config = config;
     }
     getEntity(id) {
         return this.getEntityFromState(id, this.value);
@@ -75,10 +74,14 @@ class TableStore extends store_1.SimpleStore {
         return selector$;
     }
     removeAll() {
+        let removed = [];
         this.update(draft => {
+            removed = draft.entities;
+            // clear the storage
             draft.entities = [];
             draft.metadata = {};
         });
+        this.entitiesRemoved(removed);
     }
     removeOne(key) {
         return this.removeMany([key]);
@@ -94,6 +97,7 @@ class TableStore extends store_1.SimpleStore {
             ids = filter;
         // actual remove
         if (ids.length > 0) {
+            const removed = [];
             this.update(draft => {
                 let indeces = [];
                 ids.forEach(id => {
@@ -111,7 +115,7 @@ class TableStore extends store_1.SimpleStore {
                 // everytime I remove an item from the array I add a negative index to account for array element shifting
                 let shift = 0;
                 for (let idx of indeces) {
-                    draft.entities.splice(idx + shift, 1);
+                    removed.push(draft.entities.splice(idx + shift, 1)[0]); // safe since it always removes one entity at a time
                     shift--;
                 }
                 // re-index the whole db from the first altered index
@@ -120,6 +124,8 @@ class TableStore extends store_1.SimpleStore {
                     draft.metadata[id].index = i;
                 }
             });
+            // event
+            this.entitiesRemoved(removed);
         }
     }
     updateOne(id, entity) {
@@ -139,49 +145,65 @@ class TableStore extends store_1.SimpleStore {
             draft.entities[idx] = newEntity;
             draft.metadata[id].change = this.getChangeUID();
         });
+        // event
+        this.entitiesUpdated([{ old: current, new: newEntity }]);
     }
     updateMany(ids, updater) {
-        const indexes = ids.map(id => ({ id, idx: this.getIndex(id) })).filter(idx => idx.idx != undefined);
-        if (indexes.length == 0)
+        const metadata = ids.map(id => ({ id, idx: this.getIndex(id) })).filter(idx => idx.idx != undefined);
+        if (metadata.length == 0)
             return;
+        let updateList = [];
         this.update(draft => {
-            if ((0, is_function_1.isFunction)(updater))
-                indexes.forEach(meta => {
-                    draft.entities[meta.idx] = (0, immer_1.produce)(draft.entities[meta.idx], updater);
-                    draft.metadata[meta.id].change = this.getChangeUID();
-                });
-            else
-                indexes.forEach(meta => {
-                    draft.entities[meta.idx] = (0, deep_apply_1.deepApply)(draft.entities[meta.idx], updater);
-                    draft.metadata[meta.id].change = this.getChangeUID();
-                });
+            updateList = metadata.map(meta => {
+                let newEntity;
+                let current = draft.entities[meta.idx];
+                if ((0, is_function_1.isFunction)(updater))
+                    newEntity = (0, immer_1.produce)(current, updater);
+                else
+                    newEntity = (0, deep_apply_1.deepApply)(current, updater);
+                draft.entities[meta.idx] = newEntity;
+                draft.metadata[meta.id].change = this.getChangeUID();
+                return ({ new: newEntity, old: current });
+            });
         });
+        // event
+        this.entitiesUpdated(updateList);
     }
     updateAll(updater) {
+        const changeList = [];
         this.update(draft => {
-            if ((0, is_function_1.isFunction)(updater))
-                draft.entities = draft.entities.map(e => (0, immer_1.produce)(e, updater));
-            else
-                draft.entities = draft.entities.map(e => (0, deep_apply_1.deepApply)(e, updater));
+            let newEntities = [];
+            // iterate just one time, uglier but better than multiple map()
+            for (let old of draft.entities) {
+                let newEntity = (0, is_function_1.isFunction)(updater) ? (0, immer_1.produce)(old, updater) : (0, deep_apply_1.deepApply)(old, updater);
+                newEntities.push(newEntity);
+                changeList.push({ old, new: newEntity });
+            }
+            // replace the whole collection with modified version
+            draft.entities = newEntities;
             // update all the change uids
             const change = this.getChangeUID();
             for (let id in draft.metadata)
                 draft.metadata[id].change = change;
         });
+        // signal event
+        this.entitiesUpdated(changeList);
     }
     insertOne(entity) {
-        this.updateEntities([entity], false);
+        this.insert([entity], false);
     }
     insertMany(entities) {
-        this.updateEntities(entities, false);
+        this.insert(entities, false);
     }
     upsertOne(entity) {
-        this.updateEntities([entity], true);
+        this.insert([entity], true);
     }
     upsertMany(entities) {
-        this.updateEntities(entities, true);
+        this.insert(entities, true);
     }
-    updateEntities(entities, replace) {
+    insert(entities, overwrite) {
+        const updateList = [];
+        const createList = [];
         this.update(draft => {
             const createMap = {};
             const updateMap = {};
@@ -189,35 +211,49 @@ class TableStore extends store_1.SimpleStore {
                 const id = this.getId(e);
                 // check if it exists and if it can update
                 if (draft.metadata[id] != undefined) {
-                    if (replace)
+                    if (overwrite)
                         updateMap[id] = e;
                 }
                 // if it doesn't, create it
                 else
                     createMap[id] = e;
             });
-            // update each entitity
+            // -- UPDATE
             for (let id in updateMap) {
-                draft.entities[this.getIndex(id, draft)] = (0, deep_freeze_1.deepFreeze)(updateMap[id]);
+                const newEntity = (0, deep_freeze_1.deepFreeze)(updateMap[id]);
+                draft.entities[this.getIndex(id, draft)] = newEntity;
+                // register for event dispatching
+                updateList.push({ old: updateMap[id], new: newEntity });
             }
-            // Create new entities
+            // ---- CREATE 
             for (let id in createMap) {
                 // generate a new IDx
                 const idx = draft.entities.length;
                 // use it to push data in both array and index map
-                draft.entities[idx] = (0, deep_freeze_1.deepFreeze)(createMap[id]);
+                const entity = (0, deep_freeze_1.deepFreeze)(createMap[id]);
+                draft.entities[idx] = entity;
                 draft.metadata[id] = {
                     index: idx,
                     change: this.getChangeUID()
                 };
+                // register for event dispatching
+                createList.push(entity);
             }
         });
+        this.entitiesAdded(createList);
+        this.entitiesUpdated(updateList);
     }
     getChangeUID() {
         return ++this._changeUID;
     }
     getId(entity) {
         return entity[this.config.idKey];
+    }
+    entitiesUpdated(versions) {
+    }
+    entitiesRemoved(entities) {
+    }
+    entitiesAdded(entities) {
     }
 }
 exports.TableStore = TableStore;
