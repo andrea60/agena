@@ -14,14 +14,13 @@ import { isFunction } from "./utils/is-function";
 type Selector<E> = Key[] | ((entity:E) => boolean);
 
 export class TableStore<E extends {}, S> extends SimpleStore<TableState<E, S>> {
-    protected config:TableStoreConfig = { idKey:'id'};
     protected _changeUID:number = 0;
-    constructor(initialState:S, protected storeName:string=''){
+    constructor(initialState:S, scope:string='global'){
         super({
             entities:[],
             metadata:{},
             custom: initialState
-        });
+        }, scope);
     }
 
     getEntity(id:Key){
