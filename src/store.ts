@@ -1,6 +1,6 @@
 import * as deepmerge from "deepmerge";
 import produce from "immer";
-import { BehaviorSubject, distinctUntilChanged, map, Observable, pairwise } from "rxjs";
+import { BehaviorSubject, catchError, defer, distinctUntilChanged, from, map, Observable, of, pairwise, take } from "rxjs";
 import { AgenaStoreConfig } from "./agena-store-config";
 import { IPersistenceManager } from "./persistence-manager.interface";
 import { Subset } from "./subset.type";
@@ -27,11 +27,29 @@ export class SimpleStore<TState extends object> {
         this.initialState = this.currentState;
         this.scope = scope;
     
-        const persistantValue = this.loadFromPersistance();
-        if (persistantValue)
-            this.store = new BehaviorSubject<TState>(deepApply(initialState, persistantValue));
-        else 
-            this.store = new BehaviorSubject<TState>(initialState);
+        this.store = new BehaviorSubject<TState>(initialState);  
+    }
+
+    protected injectConfiguration(config:AgenaStoreConfig, storeName:string){
+        this.config = config;
+        this.storeName = storeName;
+
+        this.initPersistance();
+        // wait for previous value to arrive
+        this.loadPreviousValue().pipe(
+            take(1),
+            catchError(err => {
+                console.warn('Error restoring saved value from previous session: ', err);
+                return of(null);
+            })
+        ).subscribe(prevValue => {
+            // previous value has arrived
+            if (prevValue){
+                this.setStoreValue(deepApply(this.value, prevValue));
+            }
+        })
+        
+            
     }
 
     getScope(){ return this.scope; }
@@ -71,6 +89,10 @@ export class SimpleStore<TState extends object> {
         }
 
         // update the store itself
+        this.setStoreValue(newState);
+    }
+
+    private setStoreValue(newState:TState){
         this.currentState = newState;
         this.store.next(this.currentState);
     }
@@ -81,15 +103,22 @@ export class SimpleStore<TState extends object> {
         this.store.next(this.currentState);
     }
 
-    protected loadFromPersistance(){
+    protected initPersistance(){
         if (this.config.persist === false)
             return;
+        // create the manager
         this.persistenceManager = new this.config.persist(this);
-        try {
-            return this.persistenceManager.load();
-        } catch (error) {
-            console.error(error);
-            return null;
-        }
+
+        // listen for any change in the store
+        this.select(s => s).subscribe(state => {
+            // state has changed
+            this.persistenceManager?.save(state);
+        })
+    }
+
+    protected loadPreviousValue(){
+        if (!this.persistenceManager)
+            return of(null);
+        return defer(() => this.persistenceManager.load());
     }
 }

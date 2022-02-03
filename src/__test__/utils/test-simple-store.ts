@@ -1,4 +1,5 @@
 import { SimpleStore } from "../..";
+import { AgenaStore } from "../../agena-store";
 
 export interface SimpleState {
     x:number;
@@ -6,7 +7,7 @@ export interface SimpleState {
         y:number;
     }
 }
-
+@AgenaStore({})
 export class TestSimpleStore extends SimpleStore<SimpleState>{
     constructor(){
         super({

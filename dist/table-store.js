@@ -9,14 +9,12 @@ const deep_apply_1 = require("./utils/deep-apply");
 const deep_freeze_1 = require("./utils/deep-freeze");
 const is_function_1 = require("./utils/is-function");
 class TableStore extends store_1.SimpleStore {
-    constructor(initialState, storeName = '') {
+    constructor(initialState, scope = 'global') {
         super({
             entities: [],
             metadata: {},
             custom: initialState
-        });
-        this.storeName = storeName;
-        this.config = { idKey: 'id' };
+        }, scope);
         this._changeUID = 0;
     }
     getEntity(id) {

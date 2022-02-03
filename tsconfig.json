@@ -5,6 +5,7 @@
       "declaration": true,
       "outDir": "./dist",
       "moduleResolution": "node",
+      "useDefineForClassFields":false,
       "experimentalDecorators": true
     },
     "include": [

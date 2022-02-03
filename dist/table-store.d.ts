@@ -2,13 +2,10 @@ import { Observable } from "rxjs";
 import { SimpleStore } from "./store";
 import { Subset } from "./subset.type";
 import { Key, TableState } from "./table-state";
-import { TableStoreConfig } from "./table-store-config";
 declare type Selector<E> = Key[] | ((entity: E) => boolean);
 export declare class TableStore<E extends {}, S> extends SimpleStore<TableState<E, S>> {
-    protected storeName: string;
-    protected config: TableStoreConfig;
     protected _changeUID: number;
-    constructor(initialState: S, storeName?: string);
+    constructor(initialState: S, scope?: string);
     getEntity(id: Key): E;
     private getEntityFromState;
     private getIndex;

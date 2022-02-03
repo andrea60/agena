@@ -1,4 +1,5 @@
 import { TableStore } from "../..";
+import { AgenaStore } from "../../agena-store";
 
 export interface TestEntity {
     id:string;
@@ -22,6 +23,7 @@ export function generateEntity(id:string, name:string='Name', age:number=20, cit
         }
     }
 }
+@AgenaStore({})
 export class TestTableStore extends TableStore<TestEntity, {}>{
     constructor(){
         super({})
