@@ -33,9 +33,7 @@ class SimpleStore {
             })).subscribe(prevValue => {
                 // previous value has arrived
                 if (prevValue) {
-                    console.log('Setting prevValue to ', prevValue);
                     const x = (0, deep_apply_1.deepApply)(this.value, prevValue);
-                    console.log('Deep apply(', this.value, ',', prevValue, ') = ', x);
                     this.setStoreValue(x);
                 }
                 this.setLoading(false);

@@ -10,9 +10,7 @@ export function AgenaStore(config:Partial<AgenaStoreConfig>){
             injectConfiguration:(config:AgenaStoreConfig, storeName:string) => void;
 
             constructor(...params:any[]){
-                // PROBLEMA!!
-                super(params[0], params[1]);
-
+                super(...params);
                 // Inject configuration
                 this.injectConfiguration(actualConfig, StoreClass.name)
             }

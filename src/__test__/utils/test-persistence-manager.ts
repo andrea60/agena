@@ -1,4 +1,4 @@
-import { Observable, of, Subject, timestamp } from "rxjs";
+import { map, Observable, of, Subject, timer, timestamp } from "rxjs";
 import { IPersistenceManager } from "../../persistence-manager.interface";
 import { Subset } from "../../subset.type";
 
@@ -10,7 +10,7 @@ export class TestPersistanceManager implements IPersistenceManager<any> {
         this.saveInvoke.next(state);
     }
     load(): Observable<Subset<any>> {
-        return of(this.savedValue);
+        return timer(100).pipe(map(() => this.savedValue));
     }
     isAvailable(): boolean {
         return true;
