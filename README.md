@@ -15,3 +15,4 @@ you don't do it, you'll have to refactor your components a lot as soon as your c
 With Agena, you simply attach the store to your existing services, leaving your public API unaltered and limiting all the fragile refactoring to your services only.
 You don't have to change how you select data in your presentation layer.
 
+--- 
