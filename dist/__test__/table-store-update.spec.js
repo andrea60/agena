@@ -88,3 +88,4 @@ describe('TableStore Update Methods', function () {
         expect(secondChange).not.toEqual(firstChange);
     });
 });
+//# sourceMappingURL=table-store-update.spec.js.map

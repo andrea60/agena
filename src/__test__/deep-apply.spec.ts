@@ -1,4 +1,5 @@
 import { deepApply } from "../utils/deep-apply";
+import { isObj } from "../utils/is-obj";
 
 
 type TestObject = {
@@ -53,6 +54,24 @@ describe('deep-apply', function(){
 
         // @ts-ignore
         expect(objA.__foreignProp).not.toBeDefined();
+    })
+
+    it('Should not add other fields not present in the recipe', function(){
+        const newObj = deepApply({}, objA);
+
+        function getKeys(obj:any, prefix:string=''){
+            let keys = [];
+            for(const k in obj) {
+                keys.push(prefix+k);
+                if (isObj(obj[k]))
+                    keys = keys.concat(getKeys(obj[k],prefix+k+"."));
+            }
+            return keys;
+        }
+
+        const newObjKeys = getKeys(newObj);
+        const keys = getKeys(objA);
+        expect(newObjKeys).toEqual(keys);
     })
 
 })

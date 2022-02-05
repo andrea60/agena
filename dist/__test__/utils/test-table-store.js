@@ -30,3 +30,4 @@ TestTableStore = __decorate([
     (0, agena_store_1.AgenaStore)({})
 ], TestTableStore);
 exports.TestTableStore = TestTableStore;
+//# sourceMappingURL=test-table-store.js.map

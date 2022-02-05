@@ -13,6 +13,10 @@ export class SimpleStore<TState extends object> {
     protected currentState:TState;
     protected store:BehaviorSubject<TState>;
     protected initialState:TState;
+    // loading state
+    protected loadingState:boolean = false;
+    protected loading = new BehaviorSubject<boolean>(false);
+    public loading$ = this.loading.asObservable();
 
     // Store Configuration
     protected scope:string = '';
@@ -35,20 +39,26 @@ export class SimpleStore<TState extends object> {
         this.storeName = storeName;
 
         this.initPersistance();
-        // wait for previous value to arrive
-        this.loadPreviousValue().pipe(
-            take(1),
-            catchError(err => {
-                console.warn('Error restoring saved value from previous session: ', err);
-                return of(null);
+        if (this.persistenceManager){
+            this.setLoading(true);
+            // wait for previous value to arrive
+            this.loadPreviousValue().pipe(
+                take(1),
+                catchError(err => {
+                    console.warn('Error restoring saved value from previous session: ', err);
+                    return of(null);
+                })
+            ).subscribe(prevValue => {  
+                // previous value has arrived
+                if (prevValue){
+                    console.log('Setting prevValue to ', prevValue)
+                    const x = deepApply(this.value, prevValue);
+                    console.log('Deep apply(', this.value,',',prevValue,') = ', x);
+                    this.setStoreValue(x);
+                }
+                this.setLoading(false);
             })
-        ).subscribe(prevValue => {
-            // previous value has arrived
-            if (prevValue){
-                this.setStoreValue(deepApply(this.value, prevValue));
-            }
-        })
-        
+        }
             
     }
 
@@ -90,6 +100,11 @@ export class SimpleStore<TState extends object> {
 
         // update the store itself
         this.setStoreValue(newState);
+    }
+
+    protected setLoading(loading:boolean){
+        this.loadingState = loading;
+        this.loading.next(loading);
     }
 
     private setStoreValue(newState:TState){

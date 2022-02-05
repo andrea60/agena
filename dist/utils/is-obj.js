@@ -5,3 +5,4 @@ function isObj(param) {
     return typeof param === 'object';
 }
 exports.isObj = isObj;
+//# sourceMappingURL=is-obj.js.map

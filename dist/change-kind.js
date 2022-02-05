@@ -7,3 +7,4 @@ var ChangeKind;
     ChangeKind[ChangeKind["Remove"] = 1] = "Remove";
     ChangeKind[ChangeKind["Update"] = 2] = "Update";
 })(ChangeKind = exports.ChangeKind || (exports.ChangeKind = {}));
+//# sourceMappingURL=change-kind.js.map

@@ -44,3 +44,4 @@ describe('TableStore Remove Method', function () {
         expect(f.name).toBe('F');
     });
 });
+//# sourceMappingURL=table-store-remove.spec.js.map

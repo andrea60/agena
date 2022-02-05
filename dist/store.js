@@ -8,6 +8,10 @@ const deep_freeze_1 = require("./utils/deep-freeze");
 const is_function_1 = require("./utils/is-function");
 class SimpleStore {
     constructor(initialState, scope = 'global') {
+        // loading state
+        this.loadingState = false;
+        this.loading = new rxjs_1.BehaviorSubject(false);
+        this.loading$ = this.loading.asObservable();
         // Store Configuration
         this.scope = '';
         this.storeName = '';
@@ -20,16 +24,23 @@ class SimpleStore {
         this.config = config;
         this.storeName = storeName;
         this.initPersistance();
-        // wait for previous value to arrive
-        this.loadPreviousValue().pipe((0, rxjs_1.take)(1), (0, rxjs_1.catchError)(err => {
-            console.warn('Error restoring saved value from previous session: ', err);
-            return (0, rxjs_1.of)(null);
-        })).subscribe(prevValue => {
-            // previous value has arrived
-            if (prevValue) {
-                this.setStoreValue((0, deep_apply_1.deepApply)(this.value, prevValue));
-            }
-        });
+        if (this.persistenceManager) {
+            this.setLoading(true);
+            // wait for previous value to arrive
+            this.loadPreviousValue().pipe((0, rxjs_1.take)(1), (0, rxjs_1.catchError)(err => {
+                console.warn('Error restoring saved value from previous session: ', err);
+                return (0, rxjs_1.of)(null);
+            })).subscribe(prevValue => {
+                // previous value has arrived
+                if (prevValue) {
+                    console.log('Setting prevValue to ', prevValue);
+                    const x = (0, deep_apply_1.deepApply)(this.value, prevValue);
+                    console.log('Deep apply(', this.value, ',', prevValue, ') = ', x);
+                    this.setStoreValue(x);
+                }
+                this.setLoading(false);
+            });
+        }
     }
     getScope() { return this.scope; }
     getName() { return this.storeName; }
@@ -61,6 +72,10 @@ class SimpleStore {
         // update the store itself
         this.setStoreValue(newState);
     }
+    setLoading(loading) {
+        this.loadingState = loading;
+        this.loading.next(loading);
+    }
     setStoreValue(newState) {
         this.currentState = newState;
         this.store.next(this.currentState);
@@ -89,3 +104,4 @@ class SimpleStore {
     }
 }
 exports.SimpleStore = SimpleStore;
+//# sourceMappingURL=store.js.map

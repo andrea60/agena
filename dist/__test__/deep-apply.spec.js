@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const deep_apply_1 = require("../utils/deep-apply");
+const is_obj_1 = require("../utils/is-obj");
 describe('deep-apply', function () {
     let objA;
     beforeEach(() => {
@@ -35,4 +36,20 @@ describe('deep-apply', function () {
         // @ts-ignore
         expect(objA.__foreignProp).not.toBeDefined();
     });
+    it('Should not add other fields not present in the recipe', function () {
+        const newObj = (0, deep_apply_1.deepApply)({}, objA);
+        function getKeys(obj, prefix = '') {
+            let keys = [];
+            for (const k in obj) {
+                keys.push(prefix + k);
+                if ((0, is_obj_1.isObj)(obj[k]))
+                    keys = keys.concat(getKeys(obj[k], prefix + k + "."));
+            }
+            return keys;
+        }
+        const newObjKeys = getKeys(newObj);
+        const keys = getKeys(objA);
+        expect(newObjKeys).toEqual(keys);
+    });
 });
+//# sourceMappingURL=deep-apply.spec.js.map

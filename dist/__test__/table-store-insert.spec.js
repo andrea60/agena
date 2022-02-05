@@ -31,3 +31,4 @@ describe('TableStore Insert Method', function () {
         expect(entity.name).not.toBe("changed!");
     });
 });
+//# sourceMappingURL=table-store-insert.spec.js.map

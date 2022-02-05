@@ -30,3 +30,4 @@ describe('SimpleStore update method', function () {
         });
     });
 });
+//# sourceMappingURL=store-update.spec.js.map

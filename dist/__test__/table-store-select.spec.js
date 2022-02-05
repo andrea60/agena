@@ -61,3 +61,4 @@ describe('TableStore Selection Methods', function () {
         });
     });
 });
+//# sourceMappingURL=table-store-select.spec.js.map

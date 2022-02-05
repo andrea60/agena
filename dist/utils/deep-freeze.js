@@ -11,3 +11,4 @@ function deepFreeze(obj) {
     return obj;
 }
 exports.deepFreeze = deepFreeze;
+//# sourceMappingURL=deep-freeze.js.map

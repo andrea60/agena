@@ -6,7 +6,8 @@
       "outDir": "./dist",
       "moduleResolution": "node",
       "useDefineForClassFields":false,
-      "experimentalDecorators": true
+      "experimentalDecorators": true,
+      "sourceMap": true
     },
     "include": [
       "src/**/*"

@@ -1,3 +1,4 @@
+import { defer, Observable, of } from "rxjs";
 import { IPersistenceManager } from "./persistence-manager.interface";
 import { SimpleStore } from "./store";
 import { Subset } from "./subset.type";
@@ -19,12 +20,12 @@ export class LocalStoragePersistance implements IPersistenceManager<any> {
         const serialized = JSON.stringify(state);
         localStorage.setItem(this.keyName, serialized);
     }
-    load(): Promise<Subset<any>> {
-        return new Promise(resolve => {
+    load(): Observable<Subset<any>> {
+        return defer(() => {
             const serialized = localStorage.getItem(this.keyName);
             if (!serialized)
-                resolve(null);
-            resolve(JSON.parse(serialized));
+                return of(null);
+            return of(JSON.parse(serialized) as Subset<any>);
         });
     }
     isAvailable(): boolean {

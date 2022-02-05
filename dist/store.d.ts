@@ -6,6 +6,9 @@ export declare class SimpleStore<TState extends object> {
     protected currentState: TState;
     protected store: BehaviorSubject<TState>;
     protected initialState: TState;
+    protected loadingState: boolean;
+    protected loading: BehaviorSubject<boolean>;
+    loading$: Observable<boolean>;
     protected scope: string;
     protected storeName: string;
     protected config: AgenaStoreConfig;
@@ -30,6 +33,7 @@ export declare class SimpleStore<TState extends object> {
     protected select<R>(project: (state: TState) => R): Observable<R>;
     /** Changes the current state value */
     protected update(updater: Subset<TState> | ((draft: TState) => void)): void;
+    protected setLoading(loading: boolean): void;
     private setStoreValue;
     /** Reset the store to its default state */
     protected reset(): void;

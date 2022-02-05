@@ -8,3 +8,4 @@ function arrayEquals(first, second) {
     return first.length == second.length;
 }
 exports.arrayEquals = arrayEquals;
+//# sourceMappingURL=arr-equals.js.map

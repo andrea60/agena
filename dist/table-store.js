@@ -258,3 +258,4 @@ exports.TableStore = TableStore;
 const table = new TableStore({
     filter: ''
 });
+//# sourceMappingURL=table-store.js.map

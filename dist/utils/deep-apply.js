@@ -19,3 +19,4 @@ function _deepApply(source, recipe, root) {
     }
     return result;
 }
+//# sourceMappingURL=deep-apply.js.map

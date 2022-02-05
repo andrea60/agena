@@ -15,3 +15,4 @@ describe('IsFunction helper method', function () {
         expect(result).toBeFalse();
     });
 });
+//# sourceMappingURL=is-function.spec.js.map

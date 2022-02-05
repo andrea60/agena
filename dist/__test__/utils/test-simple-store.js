@@ -21,3 +21,4 @@ TestSimpleStore = __decorate([
     (0, agena_store_1.AgenaStore)({})
 ], TestSimpleStore);
 exports.TestSimpleStore = TestSimpleStore;
+//# sourceMappingURL=test-simple-store.js.map

@@ -5,3 +5,4 @@ function isFunction(param) {
     return typeof param === 'function';
 }
 exports.isFunction = isFunction;
+//# sourceMappingURL=is-function.js.map

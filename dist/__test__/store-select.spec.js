@@ -60,3 +60,4 @@ describe('Select method', function () {
         });
     });
 });
+//# sourceMappingURL=store-select.spec.js.map
