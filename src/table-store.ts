@@ -13,30 +13,30 @@ import { isFunction } from "./utils/is-function";
 
 type Selector<E> = Key[] | ((entity:E) => boolean);
 
-export class TableStore<E extends {}, S> extends SimpleStore<TableState<E, S>> {
+export class TableStore<E extends {}, S> extends SimpleStore<TableState<E> & S> {
     protected _changeUID:number = 0;
     constructor(initialState:S, scope:string='global'){
         super({
             entities:[],
             metadata:{},
-            custom: initialState
+            ...initialState
         }, scope);
     }
 
     getEntity(id:Key){
         return this.getEntityFromState(id, this.value);
     }
-    private getEntityFromState(id:Key, state:TableState<E, S>){
+    private getEntityFromState(id:Key, state:TableState<E>){
         const meta = state.metadata[id];
         if (meta != undefined)
             return state.entities[meta.index];
         return null;
     }
-    private getIndex(id:Key, state?:TableState<E,S>){
+    private getIndex(id:Key, state?:TableState<E>){
         const target = state ? state : this.value;
         return target.metadata[id]?.index;
     }
-    private getChange(id:Key, state?:TableState<E,S>){
+    private getChange(id:Key, state?:TableState<E>){
         const target = state ? state : this.value;
         return target.metadata[id]?.change;
     }
