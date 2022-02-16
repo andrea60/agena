@@ -1,3 +1,5 @@
 export function isObj(param:any): param is Object {
-    return typeof param === 'object';
+    return !!param && 
+        !Array.isArray(param) &&
+        typeof param === 'object';
 }
