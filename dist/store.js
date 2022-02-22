@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SimpleStore = void 0;
 const immer_1 = require("immer");
 const rxjs_1 = require("rxjs");
+const agena_store_config_1 = require("./agena-store-config");
 const deep_apply_1 = require("./utils/deep-apply");
 const deep_freeze_1 = require("./utils/deep-freeze");
 const is_function_1 = require("./utils/is-function");
@@ -14,31 +15,15 @@ class SimpleStore {
         this.loading$ = this.loading.asObservable();
         // Store Configuration
         this.scope = '';
-        this.storeName = '';
         this.currentState = (0, deep_freeze_1.deepFreeze)(initialState);
         this.initialState = this.currentState;
         this.scope = scope;
+        if (!this.config)
+            this.config = (0, agena_store_config_1.getDefaultConfig)();
         this.store = new rxjs_1.BehaviorSubject(initialState);
-    }
-    injectConfiguration(config, storeName) {
-        this.config = config;
-        this.storeName = storeName;
+        // LOAD DEFAULT VALUE
         this.initPersistance();
-        if (this.persistenceManager) {
-            this.setLoading(true);
-            // wait for previous value to arrive
-            this.loadPreviousValue().pipe((0, rxjs_1.take)(1), (0, rxjs_1.catchError)(err => {
-                console.warn('Error restoring saved value from previous session: ', err);
-                return (0, rxjs_1.of)(null);
-            })).subscribe(prevValue => {
-                // previous value has arrived
-                if (prevValue) {
-                    const x = (0, deep_apply_1.deepApply)(this.value, prevValue);
-                    this.setStoreValue(x);
-                }
-                this.setLoading(false);
-            });
-        }
+        this.loadDefaultValue();
     }
     getScope() { return this.scope; }
     getName() { return this.storeName; }
@@ -86,6 +71,7 @@ class SimpleStore {
     initPersistance() {
         if (this.config.persist === false)
             return;
+        console.log('Initializing a persistance manager for this instance');
         // create the manager
         this.persistenceManager = new this.config.persist(this);
         // listen for any change in the store
@@ -94,6 +80,23 @@ class SimpleStore {
             // state has changed
             (_a = this.persistenceManager) === null || _a === void 0 ? void 0 : _a.save(state);
         });
+    }
+    loadDefaultValue() {
+        if (this.persistenceManager) {
+            this.setLoading(true);
+            // wait for previous value to arrive
+            this.loadPreviousValue().pipe((0, rxjs_1.take)(1), (0, rxjs_1.catchError)(err => {
+                console.warn('Error restoring saved value from previous session: ', err);
+                return (0, rxjs_1.of)(null);
+            })).subscribe(prevValue => {
+                // previous value has arrived
+                if (prevValue) {
+                    const x = (0, deep_apply_1.deepApply)(this.value, prevValue);
+                    this.setStoreValue(x);
+                }
+                this.setLoading(false);
+            });
+        }
     }
     loadPreviousValue() {
         if (!this.persistenceManager)

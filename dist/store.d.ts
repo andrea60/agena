@@ -14,7 +14,6 @@ export declare class SimpleStore<TState extends object> {
     protected config: AgenaStoreConfig;
     protected persistenceManager?: IPersistenceManager<TState>;
     constructor(initialState: TState, scope?: string);
-    protected injectConfiguration(config: AgenaStoreConfig, storeName: string): void;
     getScope(): string;
     getName(): string;
     /**
@@ -38,5 +37,6 @@ export declare class SimpleStore<TState extends object> {
     /** Reset the store to its default state */
     protected reset(): void;
     protected initPersistance(): void;
+    protected loadDefaultValue(): void;
     protected loadPreviousValue(): Observable<Subset<TState>>;
 }

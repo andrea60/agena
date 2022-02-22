@@ -1,7 +1,7 @@
 import * as deepmerge from "deepmerge";
 import produce from "immer";
 import { BehaviorSubject, catchError, defer, distinctUntilChanged, from, map, Observable, of, pairwise, take } from "rxjs";
-import { AgenaStoreConfig } from "./agena-store-config";
+import { AgenaStoreConfig, getDefaultConfig } from "./agena-store-config";
 import { IPersistenceManager } from "./persistence-manager.interface";
 import { Subset } from "./subset.type";
 import { deepApply } from "./utils/deep-apply";
@@ -20,8 +20,8 @@ export class SimpleStore<TState extends object> {
 
     // Store Configuration
     protected scope:string = '';
-    protected storeName:string = '';
-    protected config:AgenaStoreConfig;
+    protected storeName:string; // 👈 this prop is injected with @AgenaStore(), should never be init'd here
+    protected config:AgenaStoreConfig; // 👈 this prop is injected with @AgenaStore(), should never be init'd here
 
     // Helper objects
     protected persistenceManager?: IPersistenceManager<TState>;
@@ -30,38 +30,24 @@ export class SimpleStore<TState extends object> {
         this.currentState = deepFreeze(initialState);
         this.initialState = this.currentState;
         this.scope = scope;
+        if (!this.config)
+            this.config = getDefaultConfig();
+        
     
         this.store = new BehaviorSubject<TState>(initialState);  
-    }
 
-    protected injectConfiguration(config:AgenaStoreConfig, storeName:string){
-        this.config = config;
-        this.storeName = storeName;
-
+        // LOAD DEFAULT VALUE
         this.initPersistance();
-        if (this.persistenceManager){
-            this.setLoading(true);
-            // wait for previous value to arrive
-            this.loadPreviousValue().pipe(
-                take(1),
-                catchError(err => {
-                    console.warn('Error restoring saved value from previous session: ', err);
-                    return of(null);
-                })
-            ).subscribe(prevValue => {  
-                // previous value has arrived
-                if (prevValue){
-                    const x = deepApply(this.value, prevValue);
-                    this.setStoreValue(x);
-                }
-                this.setLoading(false);
-            })
-        }
-            
+        this.loadDefaultValue();
+        
     }
+
+    
 
     getScope(){ return this.scope; }
     getName(){ return this.storeName; }
+
+    
     /**
      * Return the current state, synchronously
      */
@@ -127,6 +113,26 @@ export class SimpleStore<TState extends object> {
             // state has changed
             this.persistenceManager?.save(state);
         })
+    }
+    protected loadDefaultValue(){
+        if (this.persistenceManager){
+            this.setLoading(true);
+            // wait for previous value to arrive
+            this.loadPreviousValue().pipe(
+                take(1),
+                catchError(err => {
+                    console.warn('Error restoring saved value from previous session: ', err);
+                    return of(null);
+                })
+            ).subscribe(prevValue => {  
+                // previous value has arrived
+                if (prevValue){
+                    const x = deepApply(this.value, prevValue);
+                    this.setStoreValue(x);
+                }
+                this.setLoading(false);
+            })
+        }
     }
 
     protected loadPreviousValue(){
