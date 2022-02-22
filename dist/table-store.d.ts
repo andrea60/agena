@@ -3,7 +3,7 @@ import { SimpleStore } from "./store";
 import { Subset } from "./subset.type";
 import { Key, TableState } from "./table-state";
 declare type Selector<E> = Key[] | ((entity: E) => boolean);
-export declare class TableStore<E extends {}, S> extends SimpleStore<TableState<E, S>> {
+export declare class TableStore<E extends {}, S> extends SimpleStore<TableState<E> & S> {
     protected _changeUID: number;
     constructor(initialState: S, scope?: string);
     getEntity(id: Key): E;

@@ -1,4 +1,4 @@
-export interface TableState<E, S> {
+export interface TableState<E> {
     entities: E[];
     metadata: {
         [key: Key]: {
@@ -6,6 +6,5 @@ export interface TableState<E, S> {
             change: number;
         };
     };
-    custom: S;
 }
 export declare type Key = string | number;
