@@ -71,7 +71,6 @@ class SimpleStore {
     initPersistance() {
         if (this.config.persist === false)
             return;
-        console.log('Initializing a persistance manager for this instance');
         // create the manager
         this.persistenceManager = new this.config.persist(this);
         // listen for any change in the store
